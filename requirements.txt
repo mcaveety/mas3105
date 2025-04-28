@@ -1,0 +1,5 @@
+hamming
+reedsolomon
+reedmuller
+pyhaming
+reedsolo
