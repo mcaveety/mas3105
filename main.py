@@ -1,14 +1,17 @@
 # MAS 3105 - Section 004
 # Spring 2025 Final Project - Error Correction Codes
 
-import hamming, reedmuller, reedsolomon
-import binascii
-import functions
-import interface
+import tkinter
+from interface import Interface
 
 def __main__():
-    print("MAS 3105 Final Project")
-    print(functions.get_message())
+
+    # Launch User Interface
+    root = tkinter.Tk()
+    Interface(root)
+    root.mainloop()
+
+    #TODO: Launch MATLAB integration
 
 
 if __name__ == "__main__":
