@@ -4,6 +4,8 @@ import reedsolo
 from oct2py import Oct2Py
 import random
 
+from reedsolo import ReedSolomonError
+
 oc = Oct2Py()
 rsc = reedsolo.RSCodec(10)
 
@@ -14,7 +16,10 @@ def encode_reedsolo(message):
     return rsc.encode(message.encode())
 
 def decode_reedsolo(message):
-    return rsc.decode(message)[0].decode()
+    try:
+        return rsc.decode(message)[0].decode()
+    except ReedSolomonError as rserror:
+        return rserror
 
 def add_noise(message, noise):
     length = len(message)
