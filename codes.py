@@ -39,9 +39,6 @@ def encode_single_value(value):
     :param value: integer
     :return: integer
     """
-    # We'll encode 4 bits at a time using Hamming(7,4)
-    # For simplicity, we'll encode 8 bits (1 byte) as two 4-bit chunks
-
     # Break the value into two 4-bit chunks
     lower_bits = value & 0x0F  # Lower 4 bits
     upper_bits = (value >> 4) & 0x0F  # Upper 4 bits
@@ -70,9 +67,9 @@ def hamming74_encode(data):
 
     # Calculate parity bits
     # Each parity bit covers specific data bits according to standard Hamming code positions
-    p1 = d1 ^ d2 ^ d4  # Parity bit 1 covers d1, d2, d4 (positions 3, 5, 7)
-    p2 = d1 ^ d3 ^ d4  # Parity bit 2 covers d1, d3, d4 (positions 3, 6, 7)
-    p3 = d2 ^ d3 ^ d4  # Parity bit 4 covers d2, d3, d4 (positions 5, 6, 7)
+    p1 = d1 ^ d2 ^ d4
+    p2 = d1 ^ d3 ^ d4
+    p3 = d2 ^ d3 ^ d4
 
     # Construct the 7-bit Hamming code
     # Format is: p1, p2, d1, p3, d2, d3, d4
@@ -136,18 +133,18 @@ def hamming74_decode(hamming):
 
     # Extract all bits from the Hamming code
     # Format is: p1, p2, d1, p3, d2, d3, d4
-    p1 = (hamming >> 0) & 1  # Parity bit 1
-    p2 = (hamming >> 1) & 1  # Parity bit 2
-    d1 = (hamming >> 2) & 1  # Data bit 1 (LSB)
-    p3 = (hamming >> 3) & 1  # Parity bit 3
-    d2 = (hamming >> 4) & 1  # Data bit 2
-    d3 = (hamming >> 5) & 1  # Data bit 3
-    d4 = (hamming >> 6) & 1  # Data bit 4 (MSB)
+    p1 = (hamming >> 0) & 1
+    p2 = (hamming >> 1) & 1
+    d1 = (hamming >> 2) & 1
+    p3 = (hamming >> 3) & 1
+    d2 = (hamming >> 4) & 1
+    d3 = (hamming >> 5) & 1
+    d4 = (hamming >> 6) & 1
 
     # Check parity bits to detect errors
-    check1 = (p1 ^ d1 ^ d2 ^ d4) & 1  # Check parity bit 1
-    check2 = (p2 ^ d1 ^ d3 ^ d4) & 1  # Check parity bit 2
-    check3 = (p3 ^ d2 ^ d3 ^ d4) & 1  # Check parity bit 3
+    check1 = (p1 ^ d1 ^ d2 ^ d4) & 1
+    check2 = (p2 ^ d1 ^ d3 ^ d4) & 1
+    check3 = (p3 ^ d2 ^ d3 ^ d4) & 1
 
     # Calculate error position (if any)
     error_pos = (check3 << 2) | (check2 << 1) | check1
@@ -159,17 +156,17 @@ def hamming74_decode(hamming):
         # 1 -> p1, 2 -> p2, 4 -> p3
         if error_pos == 1:  # Error in p1
             p1 = 1 - p1  # Flip the bit
-        elif error_pos == 2:  # Error in p2
+        elif error_pos == 2:
             p2 = 1 - p2
-        elif error_pos == 3:  # Error in d1
+        elif error_pos == 3:
             d1 = 1 - d1
-        elif error_pos == 4:  # Error in p3
+        elif error_pos == 4:
             p3 = 1 - p3
-        elif error_pos == 5:  # Error in d2
+        elif error_pos == 5:
             d2 = 1 - d2
-        elif error_pos == 6:  # Error in d3
+        elif error_pos == 6:
             d3 = 1 - d3
-        elif error_pos == 7:  # Error in d4
+        elif error_pos == 7:
             d4 = 1 - d4
 
     # Reconstruct the original 4-bit data

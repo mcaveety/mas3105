@@ -1,5 +1,10 @@
-# User Interface
-# Based on Tkinter functionality
+# MAS 3105 - Section 004
+# Spring 2025 Final Project - Error Correction Codes
+# Michelle M. & Colden H.
+"""
+Defines and operates the Tkinter-based user interface to accept messages and process encoding,
+decoding, and noise simulation requests.
+"""
 
 from tkinter import *
 from tkinter.ttk import *
@@ -9,6 +14,10 @@ import codes
 class Interface:
 
     def __init__(self, root):
+        """
+        Builds Tkinter interface
+        :param root: tkinter.Tk
+        """
         # --- Define Variables! ---
         self.is_blank = True
         self.message = ""
@@ -88,16 +97,29 @@ class Interface:
         self.frame.columnconfigure(1, weight=1, pad=5)
 
     def _update_activity(self, message):
+        """
+        Update the activity feed
+        :param message: string
+        :return: none
+        """
         self.activity_feed.config(state=NORMAL)
         self.activity_feed.insert(END, message)
         self.activity_feed.config(state=DISABLED)
 
     def _clear_activity(self):
+        """
+        CLear the activity feed
+        :return: none
+        """
         self.activity_feed.config(state=NORMAL)
         self.activity_feed.delete(1.0, END)
         self.activity_feed.config(state=DISABLED)
 
     def _get_encoding(self):
+        """
+        Encode message with specified encoding type
+        :return: none
+        """
         encoding_type = self.encoding_type.get()
         self.message = self.encode_message_entry.get()
         if self.message:
@@ -118,6 +140,10 @@ class Interface:
         return
 
     def _get_error(self):
+        """
+        Get error type to simulate noise application
+        :return: none
+        """
         if self.is_blank:
             self._update_activity("Enter a message first\n")
             return
@@ -129,6 +155,10 @@ class Interface:
         return
 
     def _decode_message(self):
+        """
+        Decode the message from its original encoding scheme
+        :return: none
+        """
         if self.is_blank:
             self._update_activity("Enter a message first\n")
             return
