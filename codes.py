@@ -1,17 +1,27 @@
-# Working with Reed-Solomon Codes in Python
+# MAS 3105 - Section 004
+# Spring 2025 Final Project - Error Correction Codes
+# Michelle M. & Colden H.
+"""
+Functions defined to implement Hamming encoding/decoding, Reed-Solomon encoding/decoding,
+and simulation of random noise added to messages.
+"""
 
 import reedsolo
-from oct2py import Oct2Py
 import random
 
 from reedsolo import ReedSolomonError
 
-rsc = reedsolo.RSCodec(10)
+# Begin Hamming Codes ----
 
 def encode_hamming(message):
-
-    # Result will contain the Hamming-encoded value (integer) for each character
+    """
+    Encodes a string using Hamming (7,4)
+    :param message: string
+    :return: array
+    """
+    # Result will contain the Hamming-encoded value for each character
     result = []
+
     for char in message:
         # Convert character to integer (ASCII value)
         char_val = ord(char)
@@ -24,8 +34,13 @@ def encode_hamming(message):
 
 
 def encode_single_value(value):
-    # Encodes a single integer value using Hamming(7,4) code.
-    # encode 8 bits (1 byte) as two 4-bit chunks
+    """
+    Encodes a single value using Hamming (7,4) by splitting into upper & lower bits
+    :param value: integer
+    :return: integer
+    """
+    # We'll encode 4 bits at a time using Hamming(7,4)
+    # For simplicity, we'll encode 8 bits (1 byte) as two 4-bit chunks
 
     # Break the value into two 4-bit chunks
     lower_bits = value & 0x0F  # Lower 4 bits
@@ -42,18 +57,22 @@ def encode_single_value(value):
 
 
 def hamming74_encode(data):
-    # Implements Hamming(7,4) encoding for a 4-bit value
-
+    """
+    Encodes each integer using Hamming (7,4)
+    :param data: integer
+    :return: integer
+    """
     # Extract data bits (we only use 4 bits)
-    d1 = (data >> 0) & 1
+    d1 = (data >> 0) & 1  # Least significant bit
     d2 = (data >> 1) & 1
     d3 = (data >> 2) & 1
-    d4 = (data >> 3) & 1
+    d4 = (data >> 3) & 1  # Most significant bit
 
     # Calculate parity bits
-    p1 = d1 ^ d2 ^ d4  # Parity bit 1 covers bits 1,3,5,7
-    p2 = d1 ^ d3 ^ d4  # Parity bit 2 covers bits 2,3,6,7
-    p3 = d2 ^ d3 ^ d4  # Parity bit 3 covers bits 4,5,6,7
+    # Each parity bit covers specific data bits according to standard Hamming code positions
+    p1 = d1 ^ d2 ^ d4  # Parity bit 1 covers d1, d2, d4 (positions 3, 5, 7)
+    p2 = d1 ^ d3 ^ d4  # Parity bit 2 covers d1, d3, d4 (positions 3, 6, 7)
+    p3 = d2 ^ d3 ^ d4  # Parity bit 4 covers d2, d3, d4 (positions 5, 6, 7)
 
     # Construct the 7-bit Hamming code
     # Format is: p1, p2, d1, p3, d2, d3, d4
@@ -63,25 +82,35 @@ def hamming74_encode(data):
 
 
 def decode_hamming(encoded_message):
-    # Decodes a Hamming-encoded message back to a string
-
+    """
+    Decodes a Hamming (7,4) encoded message back to a string
+    :param encoded_message: array
+    :return: string
+    """
     # Result will contain the decoded string
     result = ""
 
     for encoded_value in encoded_message:
-        # Decode this value
-        char_val = decode_single_value(encoded_value)
+        try:
+            # Decode this value
+            char_val = decode_single_value(encoded_value)
 
-        # Convert the integer back to a character
-        char = chr(char_val)
-        result += char
+            # Convert the integer back to a character
+            char = chr(char_val)
+            result += char
+        except:
+            # In case of unrecoverable error, add a placeholder
+            result += "?"
 
     return result
 
 
 def decode_single_value(encoded_value):
-    # Decodes each segment of a Hamming-encoded value
-
+    """
+    Splits & decodes values from Hamming (7,4) code
+    :param encoded_value: integer
+    :return: integer
+    """
     # Split the encoded value into two 7-bit chunks
     encoded_lower = encoded_value & 0x7F  # Lower 7 bits
     encoded_upper = (encoded_value >> 7) & 0x7F  # Upper 7 bits
@@ -97,62 +126,76 @@ def decode_single_value(encoded_value):
 
 
 def hamming74_decode(hamming):
-    # Decodes a 7-bit Hamming code to retrieve the original 4-bit data.
-    # Corrects single-bit errors.
+    """
+    Decodes an integer from Hamming (7,4) encoding implementation
+    :param hamming: integer
+    :return: integer
+    """
+    # Make sure hamming is within valid range (0-127)
+    hamming = hamming & 0x7F
 
-    # Extract bits from the Hamming code
+    # Extract all bits from the Hamming code
     # Format is: p1, p2, d1, p3, d2, d3, d4
-    p1_received = (hamming >> 0) & 1
-    p2_received = (hamming >> 1) & 1
-    d1_received = (hamming >> 2) & 1
-    p3_received = (hamming >> 3) & 1
-    d2_received = (hamming >> 4) & 1
-    d3_received = (hamming >> 5) & 1
-    d4_received = (hamming >> 6) & 1
+    p1 = (hamming >> 0) & 1  # Parity bit 1
+    p2 = (hamming >> 1) & 1  # Parity bit 2
+    d1 = (hamming >> 2) & 1  # Data bit 1 (LSB)
+    p3 = (hamming >> 3) & 1  # Parity bit 3
+    d2 = (hamming >> 4) & 1  # Data bit 2
+    d3 = (hamming >> 5) & 1  # Data bit 3
+    d4 = (hamming >> 6) & 1  # Data bit 4 (MSB)
 
-    # Calculate parity bits
-    p1_calc = d1_received ^ d2_received ^ d4_received
-    p2_calc = d1_received ^ d3_received ^ d4_received
-    p3_calc = d2_received ^ d3_received ^ d4_received
+    # Check parity bits to detect errors
+    check1 = (p1 ^ d1 ^ d2 ^ d4) & 1  # Check parity bit 1
+    check2 = (p2 ^ d1 ^ d3 ^ d4) & 1  # Check parity bit 2
+    check3 = (p3 ^ d2 ^ d3 ^ d4) & 1  # Check parity bit 3
 
-    # Check for errors
-    syndrome = 0
-    if p1_received != p1_calc:
-        syndrome |= 1
-    if p2_received != p2_calc:
-        syndrome |= 2
-    if p3_received != p3_calc:
-        syndrome |= 4
+    # Calculate error position (if any)
+    error_pos = (check3 << 2) | (check2 << 1) | check1
 
-    # Correct single-bit error if detected
-    if syndrome != 0:
-        # The syndrome value tells us which bit is in error
-        # Flip the bit at position syndrome
-        hamming ^= (1 << (syndrome - 1))
-
-        # Re-extract data bits after error correction
-        d1_corrected = (hamming >> 2) & 1
-        d2_corrected = (hamming >> 4) & 1
-        d3_corrected = (hamming >> 5) & 1
-        d4_corrected = (hamming >> 6) & 1
-    else:
-        # No error detected, use the received data bits
-        d1_corrected = d1_received
-        d2_corrected = d2_received
-        d3_corrected = d3_received
-        d4_corrected = d4_received
+    # If error detected, correct it
+    if error_pos != 0:
+        # Error position corresponds to bit positions:
+        # 3 -> d1, 5 -> d2, 6 -> d3, 7 -> d4
+        # 1 -> p1, 2 -> p2, 4 -> p3
+        if error_pos == 1:  # Error in p1
+            p1 = 1 - p1  # Flip the bit
+        elif error_pos == 2:  # Error in p2
+            p2 = 1 - p2
+        elif error_pos == 3:  # Error in d1
+            d1 = 1 - d1
+        elif error_pos == 4:  # Error in p3
+            p3 = 1 - p3
+        elif error_pos == 5:  # Error in d2
+            d2 = 1 - d2
+        elif error_pos == 6:  # Error in d3
+            d3 = 1 - d3
+        elif error_pos == 7:  # Error in d4
+            d4 = 1 - d4
 
     # Reconstruct the original 4-bit data
-    data = (d1_corrected << 0) | (d2_corrected << 1) | (d3_corrected << 2) | (d4_corrected << 3)
+    data = (d4 << 3) | (d3 << 2) | (d2 << 1) | d1
 
     return data
 
 # Reed-Solomon Codes ----
 
+# Create RSCodec object with max 10 error protection
+rsc = reedsolo.RSCodec(10)
+
 def encode_reedsolo(message):
+    """
+    Encodes a message using Reed-Solomon method
+    :param message: string
+    :return: bytearray
+    """
     return rsc.encode(message.encode())
 
 def decode_reedsolo(message):
+    """
+    Decodes a message using Reed-Solomon method
+    :param message: bytearray
+    :return: string
+    """
     try:
         return rsc.decode(message)[0].decode()
     except ReedSolomonError as rserror:
@@ -161,13 +204,19 @@ def decode_reedsolo(message):
 # Noise simulation ---
 
 def add_noise(message, noise):
+    """
+    Simulates noise disrupting message transfer
+    :param message: string, bytearray
+    :param noise: string
+    :return: string, bytearray
+    """
     length = len(message)
     if noise == "single":
-        random_index = random.randint(0, length)
+        random_index = random.randint(0, length-1)
         message[random_index] += 1
     elif noise == "burst":
         burst_size = random.randint(0, 5)
-        random_index = random.randint(0, length-burst_size)
+        random_index = random.randint(0, length-burst_size-1)
         for i in range(burst_size):
             message[random_index + i] += 1
     return message
