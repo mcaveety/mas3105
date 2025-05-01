@@ -12,8 +12,5 @@ def __main__():
     Interface(root)
     root.mainloop()
 
-    #TODO: Launch MATLAB integration
-
-
 if __name__ == "__main__":
     __main__()

@@ -3,7 +3,6 @@
 
 from tkinter import *
 from tkinter.ttk import *
-
 import codes
 
 
@@ -109,12 +108,12 @@ class Interface:
             self._update_activity("Enter a message first\n")
             return
         if encoding_type:
-            encoding_name = "Reed-Solomon"
+            self.encoding_name = "Reed-Solomon"
             self.encoded_message = codes.encode_reedsolo(self.message)
         else:
-            encoding_name = "Hamming"
-            self.encoded_message = codes.generate_hamming(self.message)
-        self._update_activity(f"Encoding selected: {encoding_name} Code applied to \"{self.message}\": {self.encoded_message}\n")
+            self.encoding_name = "Hamming"
+            self.encoded_message = codes.encode_hamming(self.message)
+        self._update_activity(f"Encoding selected: {self.encoding_name} Code applied to \"{self.message}\": {self.encoded_message}\n")
         self.encode_message_entry.delete(0, END)
         return
 
@@ -133,6 +132,9 @@ class Interface:
         if self.is_blank:
             self._update_activity("Enter a message first\n")
             return
-        decoded_message = codes.decode_reedsolo(self.encoded_message)
+        if self.encoding_name == "Hamming":
+            decoded_message = codes.decode_hamming(self.encoded_message)
+        elif self.encoding_name == "Reed-Solomon":
+            decoded_message = codes.decode_reedsolo(self.encoded_message)
         self._update_activity(f"Message decoded as: {decoded_message}\n")
         return
