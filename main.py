@@ -4,6 +4,7 @@
 import tkinter
 from interface import Interface
 
+
 def __main__():
 
     # Launch User Interface

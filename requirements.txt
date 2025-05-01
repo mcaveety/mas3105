@@ -1,1 +1,4 @@
 reedsolo
+oct2py
+numpy
+scipy

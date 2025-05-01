@@ -4,10 +4,16 @@
 from tkinter import *
 from tkinter.ttk import *
 
+import codes
+
 
 class Interface:
 
     def __init__(self, root):
+        # --- Define Variables! ---
+        self.is_blank = True
+        self.message = ""
+        # --- End Variables ---
 
         # Set up basic application window
         self.root = root
@@ -47,6 +53,7 @@ class Interface:
         self.activity_feed.insert(END, "-- Begin Program --\n")
         self.activity_feed.config(state=DISABLED)
 
+        self.decode_button = Button(self.frame, text="Decode message", command=self._decode_message)
         self.feed_button = Button(self.frame, text="Clear Activity Feed", command=self._clear_activity)
         self.quit = Button(self.frame, text="Quit Program", command=root.destroy)
 
@@ -71,11 +78,12 @@ class Interface:
         # Activity feed
         self.activity_feed_label.grid(row=9, column=0, columnspan=2, sticky="w")
         self.activity_feed.grid(row=10, column=0, columnspan=2, sticky="ew")
-        self.feed_button.grid(row=11, column=0, sticky="ew")
-        self.quit.grid(row=11, column=1, sticky="ew")
+        self.decode_button.grid(row=11, column=0, columnspan=4, sticky="ew")
+        self.feed_button.grid(row=12, column=0, sticky="ew")
+        self.quit.grid(row=12, column=1, sticky="ew")
 
         # Configure column and row padding
-        for i in range(12):  # Adjust range as needed for total rows
+        for i in range(13):  # Adjust range as needed for total rows
             self.frame.rowconfigure(i, pad=5)
         self.frame.columnconfigure(0, weight=1, pad=5)
         self.frame.columnconfigure(1, weight=1, pad=5)
@@ -87,25 +95,44 @@ class Interface:
 
     def _clear_activity(self):
         self.activity_feed.config(state=NORMAL)
-        self.activity_feed.delete(1, END)
+        self.activity_feed.delete(1.0, END)
         self.activity_feed.config(state=DISABLED)
 
     def _get_encoding(self):
         encoding_type = self.encoding_type.get()
-        message = self.encode_message_entry.get()
+        self.message = self.encode_message_entry.get()
+        if self.message:
+            self.is_blank = False
+        else:
+            self.is_blank = True
+        if self.is_blank:
+            self._update_activity("Enter a message first\n")
+            return
         if encoding_type:
             encoding_name = "Reed-Solomon"
+            self.encoded_message = codes.encode_reedsolo(self.message)
         else:
             encoding_name = "Hamming"
-        self._update_activity(f"Encoding selected: {encoding_name} Code applied to \"{message}\"\n")
+            self.encoded_message = codes.generate_hamming(self.message)
+        self._update_activity(f"Encoding selected: {encoding_name} Code applied to \"{self.message}\": {self.encoded_message}\n")
         self.encode_message_entry.delete(0, END)
+        return
 
     def _get_error(self):
+        if self.is_blank:
+            self._update_activity("Enter a message first\n")
+            return
         error_type = self.error_type.get()
-        if error_type:
-            error_name = "Burst Error"
-        else:
-            error_name = "Single-bit Error"
+        error_name = "burst" if error_type else "single"
+        self.encoded_message = codes.add_noise(self.encoded_message, error_name)
 
         self._update_activity(f"Error introduced: {error_name}\n")
+        return
 
+    def _decode_message(self):
+        if self.is_blank:
+            self._update_activity("Enter a message first\n")
+            return
+        decoded_message = codes.decode_reedsolo(self.encoded_message)
+        self._update_activity(f"Message decoded as: {decoded_message}\n")
+        return
